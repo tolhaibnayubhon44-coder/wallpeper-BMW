@@ -13,8 +13,9 @@ class Rasmlar {
     List<Map<String, dynamic>> images = [];
 
     try {
-      final searchQuery =
-          query.toLowerCase().contains('bmw') ? query : 'BMW $query';
+      final searchQuery = query.toLowerCase().contains('bmw')
+          ? query
+          : 'BMW $query';
 
       final response = await http.get(
         Uri.parse(
@@ -77,7 +78,12 @@ class _WallpaperPageState extends State<WallpaperPage> {
     {'id': 'm4', 'name': 'M4', 'icon': '💎', 'query': 'BMW M4 car'},
     {'id': 'x5', 'name': 'X5', 'icon': '🚙', 'query': 'BMW X5 SUV'},
     {'id': 'i8', 'name': 'i8', 'icon': '🏎️', 'query': 'BMW i8 sports car'},
-    {'id': 'classic', 'name': 'Classic', 'icon': '🏁', 'query': 'BMW classic car'},
+    {
+      'id': 'classic',
+      'name': 'Classic',
+      'icon': '🏁',
+      'query': 'BMW classic car',
+    },
   ];
 
   @override
@@ -100,8 +106,9 @@ class _WallpaperPageState extends State<WallpaperPage> {
       currentPage = 1;
     });
 
-    final query =
-        categories.firstWhere((c) => c['id'] == selectedCategory)['query']!;
+    final query = categories.firstWhere(
+      (c) => c['id'] == selectedCategory,
+    )['query']!;
     final newImages = await rasmlar.searchBMW(query, currentPage);
 
     setState(() {
@@ -116,8 +123,9 @@ class _WallpaperPageState extends State<WallpaperPage> {
       currentPage++;
     });
 
-    final query =
-        categories.firstWhere((c) => c['id'] == selectedCategory)['query']!;
+    final query = categories.firstWhere(
+      (c) => c['id'] == selectedCategory,
+    )['query']!;
     final newImages = await rasmlar.searchBMW(query, currentPage);
 
     setState(() {
@@ -140,7 +148,6 @@ class _WallpaperPageState extends State<WallpaperPage> {
         controller: scrollController,
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
-            // Custom SliverAppBar
             SliverAppBar(
               expandedHeight: 140,
               floating: true,
@@ -162,34 +169,30 @@ class _WallpaperPageState extends State<WallpaperPage> {
                   ),
                 ),
               ),
-              title: Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue[700]!, Colors.blue[500]!],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blue.withOpacity(0.4),
-                      blurRadius: 10,
-                      offset: Offset(0, 4),
+              // ✅ BMW LOGO - Asset rasmdan
+              title: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.8, end: 1.0),
+                duration: Duration(milliseconds: 600),
+                curve: Curves.easeOutBack,
+                builder: (context, scale, child) {
+                  return Transform.scale(
+                    scale: scale,
+                    child: Container(
+                      height: 100,
+                      width: 100,
+                      padding: EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage('assets/images/bmw-logo.png'),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-                child: Text(
-                  'BMW',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 3,
-                  ),
-                ),
+                  );
+                },
               ),
               centerTitle: true,
               actions: [
-                // Search Button
                 Container(
                   margin: EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(
@@ -206,21 +209,25 @@ class _WallpaperPageState extends State<WallpaperPage> {
                       Navigator.push(
                         context,
                         PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) =>
-                              SearchPage(),
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  SearchPage(),
                           transitionsBuilder:
                               (context, animation, secondaryAnimation, child) {
-                            return SlideTransition(
-                              position: Tween<Offset>(
-                                begin: Offset(1.0, 0.0),
-                                end: Offset.zero,
-                              ).animate(CurvedAnimation(
-                                parent: animation,
-                                curve: Curves.easeOutCubic,
-                              )),
-                              child: child,
-                            );
-                          },
+                                return SlideTransition(
+                                  position:
+                                      Tween<Offset>(
+                                        begin: Offset(1.0, 0.0),
+                                        end: Offset.zero,
+                                      ).animate(
+                                        CurvedAnimation(
+                                          parent: animation,
+                                          curve: Curves.easeOutCubic,
+                                        ),
+                                      ),
+                                  child: child,
+                                );
+                              },
                           transitionDuration: Duration(milliseconds: 300),
                         ),
                       );
@@ -253,7 +260,9 @@ class _WallpaperPageState extends State<WallpaperPage> {
                           child: AnimatedContainer(
                             duration: Duration(milliseconds: 200),
                             padding: EdgeInsets.symmetric(
-                                horizontal: 18, vertical: 10),
+                              horizontal: 18,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               gradient: isSelected
                                   ? LinearGradient(
@@ -284,7 +293,10 @@ class _WallpaperPageState extends State<WallpaperPage> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(cat['icon']!, style: TextStyle(fontSize: 16)),
+                                Text(
+                                  cat['icon']!,
+                                  style: TextStyle(fontSize: 16),
+                                ),
                                 SizedBox(width: 6),
                                 Text(
                                   cat['name']!,
@@ -333,10 +345,7 @@ class _WallpaperPageState extends State<WallpaperPage> {
             SizedBox(height: 20),
             Text(
               'Loading BMW wallpapers...',
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.grey[500], fontSize: 16),
             ),
           ],
         ),
@@ -363,10 +372,7 @@ class _WallpaperPageState extends State<WallpaperPage> {
             SizedBox(height: 20),
             Text(
               'No BMW wallpapers found',
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 18,
-              ),
+              style: TextStyle(color: Colors.grey[500], fontSize: 18),
             ),
           ],
         ),
@@ -457,7 +463,6 @@ class _WallpaperPageState extends State<WallpaperPage> {
                     );
                   },
                 ),
-                // Gradient overlay
                 Positioned(
                   bottom: 0,
                   left: 0,

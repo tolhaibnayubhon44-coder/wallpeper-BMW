@@ -1,26 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'WallpaperPage.dart';  // ✅ To'g'ri import
+import 'package:walpeper_bmw_4_yangi/SplashScreen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Status bar va navigation bar ranglarini o'rnatish
+  // Status bar ni shaffof qilish
   SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
+    SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
       systemNavigationBarColor: Colors.black,
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
-  
-  runApp(const MyApp());
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -30,9 +28,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.black,
         brightness: Brightness.dark,
-        fontFamily: 'Roboto',
       ),
-      home: WallpaperPage(),  // ✅ To'g'ri chaqiruv
+      home: SplashScreen(), // ✅ SplashScreen birinchi ochiladi
     );
   }
 }
