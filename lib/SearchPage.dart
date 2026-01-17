@@ -653,7 +653,7 @@ class _SearchPageState extends State<SearchPage> with SingleTickerProviderStateM
           context,
           MaterialPageRoute(
             builder: (context) => FullscreenWallpaper(image: image),
-          ),
+          ), 
         );
       },
       child: Hero(
