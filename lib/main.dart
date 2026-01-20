@@ -1,35 +1,32 @@
+// lib/main.dart
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:walpeper_bmw_4_yangi/MainNavigation.dart';
 import 'package:walpeper_bmw_4_yangi/SplashScreen.dart';
+import 'package:walpeper_bmw_4_yangi/WallpaperProvider.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  // Status bar ni shaffof qilish
-  SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Colors.black,
-      systemNavigationBarIconBrightness: Brightness.light,
-    ),
-  );
-
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'BMW Wallpapers',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.black,
-        brightness: Brightness.dark,
+    return ChangeNotifierProvider(
+      create: (context) => WallpaperProvider(),
+      child: MaterialApp(
+        title: 'BMW Wallpapers',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          brightness: Brightness.dark,
+          scaffoldBackgroundColor: Colors.black,
+        ),
+        home: SplashScreen(),
       ),
-      home: SplashScreen(), // ✅ SplashScreen birinchi ochiladi
     );
   }
 }

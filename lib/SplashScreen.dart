@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:walpeper_bmw_4_yangi/MainNavigation.dart';
 import 'package:walpeper_bmw_4_yangi/WallpaperPage.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -85,7 +86,7 @@ class _SplashScreenState extends State<SplashScreen>
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            WallpaperPage(),
+            MainNavigation(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },

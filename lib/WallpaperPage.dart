@@ -1,8 +1,12 @@
+// lib/screens/WallpaperPage.dart
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:walpeper_bmw_4_yangi/FullscreenWallpaper.dart';
-import 'package:walpeper_bmw_4_yangi/SearchPage.dart';
+import 'package:provider/provider.dart';
+import 'package:walpeper_bmw_4_yangi/WallpaperProvider.dart';
+// import '../providers/wallpaper_provider.dart';
+import 'FullscreenWallpaper.dart';
 
 class Rasmlar {
   final String apiKey =
@@ -13,9 +17,8 @@ class Rasmlar {
     List<Map<String, dynamic>> images = [];
 
     try {
-      final searchQuery = query.toLowerCase().contains('bmw')
-          ? query
-          : 'BMW $query';
+      final searchQuery =
+          query.toLowerCase().contains('bmw') ? query : 'BMW $query';
 
       final response = await http.get(
         Uri.parse(
@@ -78,12 +81,7 @@ class _WallpaperPageState extends State<WallpaperPage> {
     {'id': 'm4', 'name': 'M4', 'icon': '💎', 'query': 'BMW M4 car'},
     {'id': 'x5', 'name': 'X5', 'icon': '🚙', 'query': 'BMW X5 SUV'},
     {'id': 'i8', 'name': 'i8', 'icon': '🏎️', 'query': 'BMW i8 sports car'},
-    {
-      'id': 'classic',
-      'name': 'Classic',
-      'icon': '🏁',
-      'query': 'BMW classic car',
-    },
+    {'id': 'classic', 'name': 'Classic', 'icon': '🏁', 'query': 'BMW classic car'},
   ];
 
   @override
@@ -106,9 +104,8 @@ class _WallpaperPageState extends State<WallpaperPage> {
       currentPage = 1;
     });
 
-    final query = categories.firstWhere(
-      (c) => c['id'] == selectedCategory,
-    )['query']!;
+    final query =
+        categories.firstWhere((c) => c['id'] == selectedCategory)['query']!;
     final newImages = await rasmlar.searchBMW(query, currentPage);
 
     setState(() {
@@ -123,9 +120,8 @@ class _WallpaperPageState extends State<WallpaperPage> {
       currentPage++;
     });
 
-    final query = categories.firstWhere(
-      (c) => c['id'] == selectedCategory,
-    )['query']!;
+    final query =
+        categories.firstWhere((c) => c['id'] == selectedCategory)['query']!;
     final newImages = await rasmlar.searchBMW(query, currentPage);
 
     setState(() {
@@ -169,7 +165,6 @@ class _WallpaperPageState extends State<WallpaperPage> {
                   ),
                 ),
               ),
-              // ✅ BMW LOGO - Asset rasmdan
               title: TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0.8, end: 1.0),
                 duration: Duration(milliseconds: 600),
@@ -192,49 +187,6 @@ class _WallpaperPageState extends State<WallpaperPage> {
                 },
               ),
               centerTitle: true,
-              actions: [
-                Container(
-                  margin: EdgeInsets.only(right: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[900],
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.blue.withOpacity(0.5),
-                      width: 2,
-                    ),
-                  ),
-                  child: IconButton(
-                    icon: Icon(Icons.search, color: Colors.blue[400], size: 24),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  SearchPage(),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                                return SlideTransition(
-                                  position:
-                                      Tween<Offset>(
-                                        begin: Offset(1.0, 0.0),
-                                        end: Offset.zero,
-                                      ).animate(
-                                        CurvedAnimation(
-                                          parent: animation,
-                                          curve: Curves.easeOutCubic,
-                                        ),
-                                      ),
-                                  child: child,
-                                );
-                              },
-                          transitionDuration: Duration(milliseconds: 300),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
               bottom: PreferredSize(
                 preferredSize: Size.fromHeight(60),
                 child: Container(
@@ -293,10 +245,7 @@ class _WallpaperPageState extends State<WallpaperPage> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(
-                                  cat['icon']!,
-                                  style: TextStyle(fontSize: 16),
-                                ),
+                                Text(cat['icon']!, style: TextStyle(fontSize: 16)),
                                 SizedBox(width: 6),
                                 Text(
                                   cat['name']!,
@@ -363,11 +312,7 @@ class _WallpaperPageState extends State<WallpaperPage> {
                 color: Colors.grey[900],
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.directions_car,
-                size: 60,
-                color: Colors.grey[700],
-              ),
+              child: Icon(Icons.directions_car, size: 60, color: Colors.grey[700]),
             ),
             SizedBox(height: 20),
             Text(
@@ -406,104 +351,163 @@ class _WallpaperPageState extends State<WallpaperPage> {
           }
 
           final image = images[index];
-
           return _buildWallpaperCard(image);
         },
       ),
     );
   }
 
+  // ✅ YANGILANGAN - Saqlash tugmasi qo'shildi
   Widget _buildWallpaperCard(Map<String, dynamic> image) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => FullscreenWallpaper(image: image),
+    return Consumer<WallpaperProvider>(
+      builder: (context, provider, child) {
+        final isSaved = provider.isSaved(image['id']);
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FullscreenWallpaper(image: image),
+              ),
+            );
+          },
+          child: Hero(
+            tag: 'main_${image['id']}',
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.2),
+                    blurRadius: 12,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Rasm
+                    Image.network(
+                      image['portrait'] ?? image['thumbnail'],
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return Container(
+                          color: Colors.grey[900],
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.blue[400],
+                              strokeWidth: 2,
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[900],
+                          child: Icon(Icons.error, color: Colors.red),
+                        );
+                      },
+                    ),
+
+                    // ✅ SAQLASH TUGMASI
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: () {
+                          provider.toggleSave(image);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                children: [
+                                  Icon(
+                                    isSaved ? Icons.delete : Icons.favorite,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(isSaved ? 'O\'chirildi' : 'Saqlandi! ❤️'),
+                                ],
+                              ),
+                              backgroundColor:
+                                  isSaved ? Colors.grey[700] : Colors.green,
+                              duration: Duration(seconds: 1),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSaved
+                                  ? Colors.red
+                                  : Colors.white.withOpacity(0.3),
+                              width: 2,
+                            ),
+                          ),
+                          child: Icon(
+                            isSaved ? Icons.favorite : Icons.favorite_border,
+                            color: isSaved ? Colors.red : Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Photographer info
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                            colors: [
+                              Colors.black.withOpacity(0.9),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.person, color: Colors.blue[400], size: 14),
+                            SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                image['photographer'],
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         );
       },
-      child: Hero(
-        tag: 'main_${image['id']}',
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.blue.withOpacity(0.2),
-                blurRadius: 12,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Image.network(
-                  image['portrait'] ?? image['thumbnail'],
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, progress) {
-                    if (progress == null) return child;
-                    return Container(
-                      color: Colors.grey[900],
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: Colors.blue[400],
-                          strokeWidth: 2,
-                        ),
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[900],
-                      child: Icon(Icons.error, color: Colors.red),
-                    );
-                  },
-                ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          Colors.black.withOpacity(0.9),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.person, color: Colors.blue[400], size: 14),
-                        SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            image['photographer'],
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
