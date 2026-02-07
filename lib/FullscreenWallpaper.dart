@@ -47,7 +47,7 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
       '';
 
   String get _fileName => 'BMW_Wallpaper_${widget.image['id']}';
-  
+
   get Share => null;
 
   @override
@@ -77,7 +77,7 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
                           color: Colors.blue[400],
                           value: progress.expectedTotalBytes != null
                               ? progress.cumulativeBytesLoaded /
-                                  progress.expectedTotalBytes!
+                                    progress.expectedTotalBytes!
                               : null,
                         ),
                       ),
@@ -203,16 +203,22 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
                         ),
                         Consumer<WallpaperProvider>(
                           builder: (context, provider, child) {
-                            final isSaved = provider.isSaved(widget.image['id']);
+                            final isSaved = provider.isSaved(
+                              widget.image['id'],
+                            );
                             return _buildCircleButton(
-                              icon: isSaved ? Icons.favorite : Icons.favorite_border,
+                              icon: isSaved
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
                               color: isSaved ? Colors.red : Colors.white,
                               onTap: () {
                                 provider.toggleSave(widget.image);
                                 _showSnackBar(
                                   isSaved ? 'O\'chirildi' : 'Saqlandi! ❤️',
                                   icon: isSaved ? Icons.delete : Icons.favorite,
-                                  color: isSaved ? Colors.grey[700]! : Colors.green,
+                                  color: isSaved
+                                      ? Colors.grey[700]!
+                                      : Colors.green,
                                 );
                               },
                             );
@@ -266,7 +272,10 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
                                   children: [
                                     const Text(
                                       'Photographer',
-                                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
+                                      ),
                                     ),
                                     Text(
                                       widget.image['photographer'] ?? 'Unknown',
@@ -369,10 +378,7 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
             child: Icon(icon, color: Colors.white, size: 22),
           ),
           const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(color: Colors.grey[300], fontSize: 11),
-          ),
+          Text(label, style: TextStyle(color: Colors.grey[300], fontSize: 11)),
         ],
       ),
     );
@@ -467,7 +473,11 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
         subject: 'BMW Wallpaper',
       );
     } catch (e) {
-      _showSnackBar('Ulashishda xatolik!', icon: Icons.error, color: Colors.red);
+      _showSnackBar(
+        'Ulashishda xatolik!',
+        icon: Icons.error,
+        color: Colors.red,
+      );
     }
   }
 
@@ -506,9 +516,18 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
                 ),
               ),
               const SizedBox(height: 16),
-              _buildInfoRow('Photographer', widget.image['photographer'] ?? 'Unknown'),
-              _buildInfoRow('Description', widget.image['description'] ?? 'No description'),
-              _buildInfoRow('Resolution', '${widget.image['width'] ?? '?'}x${widget.image['height'] ?? '?'}'),
+              _buildInfoRow(
+                'Photographer',
+                widget.image['photographer'] ?? 'Unknown',
+              ),
+              _buildInfoRow(
+                'Description',
+                widget.image['description'] ?? 'No description',
+              ),
+              _buildInfoRow(
+                'Resolution',
+                '${widget.image['width'] ?? '?'}x${widget.image['height'] ?? '?'}',
+              ),
               _buildInfoRow('ID', '${widget.image['id'] ?? 'Unknown'}'),
               const SizedBox(height: 20),
             ],
@@ -542,7 +561,11 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
     );
   }
 
-  void _showSnackBar(String message, {required IconData icon, required Color color}) {
+  void _showSnackBar(
+    String message, {
+    required IconData icon,
+    required Color color,
+  }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -560,10 +583,12 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
     );
   }
 
+  // ✅ Success dialog - faqat dialogni yopadi
   void _showSuccessDialog(String message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      barrierDismissible: true, // Dialog tashqarisiga bosib yopish mumkin
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.grey[900],
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Column(
@@ -575,7 +600,11 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
                 color: Colors.green.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check_circle, color: Colors.green, size: 60),
+              child: const Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 60,
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -597,9 +626,15 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
         actions: [
           Center(
             child: TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                // ✅ Faqat dialogni yopamiz (FullscreenWallpaper sahifasidan chiqmaymiz)
+                Navigator.of(dialogContext).pop();
+              },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Colors.blue[600]!, Colors.blue[400]!],
@@ -608,7 +643,10 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
                 ),
                 child: const Text(
                   'OK',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
