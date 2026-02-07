@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:walpeper_bmw_4_yangi/WallpaperProvider.dart';
@@ -17,8 +18,9 @@ class Rasmlar {
     List<Map<String, dynamic>> images = [];
 
     try {
-      final searchQuery =
-          query.toLowerCase().contains('bmw') ? query : 'BMW $query';
+      final searchQuery = query.toLowerCase().contains('bmw')
+          ? query
+          : 'BMW $query';
 
       final response = await http.get(
         Uri.parse(
@@ -35,9 +37,8 @@ class Rasmlar {
             final alt = (photo['alt'] ?? '').toLowerCase();
             final photographer = (photo['photographer'] ?? '').toLowerCase();
 
+            // ✅ Faqat BMW rasmlari
             if (alt.contains('bmw') ||
-                alt.contains('car') ||
-                alt.contains('vehicle') ||
                 photographer.contains('bmw') ||
                 searchQuery.toLowerCase().contains('bmw')) {
               images.add({
@@ -81,7 +82,12 @@ class _WallpaperPageState extends State<WallpaperPage> {
     {'id': 'm4', 'name': 'M4', 'icon': '💎', 'query': 'BMW M4 car'},
     {'id': 'x5', 'name': 'X5', 'icon': '🚙', 'query': 'BMW X5 SUV'},
     {'id': 'i8', 'name': 'i8', 'icon': '🏎️', 'query': 'BMW i8 sports car'},
-    {'id': 'classic', 'name': 'Classic', 'icon': '🏁', 'query': 'BMW classic car'},
+    {
+      'id': 'classic',
+      'name': 'Classic',
+      'icon': '🏁',
+      'query': 'BMW classic car',
+    },
   ];
 
   @override
@@ -101,15 +107,18 @@ class _WallpaperPageState extends State<WallpaperPage> {
   Future<void> loadGallery() async {
     setState(() {
       loading = true;
-      currentPage = 1;
+      currentPage =
+          1 + Random().nextInt(10); // ✅ Har safar random sahifa (1-10)
     });
 
-    final query =
-        categories.firstWhere((c) => c['id'] == selectedCategory)['query']!;
+    final query = categories.firstWhere(
+      (c) => c['id'] == selectedCategory,
+    )['query']!;
     final newImages = await rasmlar.searchBMW(query, currentPage);
 
     setState(() {
       images = newImages;
+      images.shuffle(); // ✅ Rasmlarni aralashtiramiz
       loading = false;
     });
   }
@@ -120,8 +129,9 @@ class _WallpaperPageState extends State<WallpaperPage> {
       currentPage++;
     });
 
-    final query =
-        categories.firstWhere((c) => c['id'] == selectedCategory)['query']!;
+    final query = categories.firstWhere(
+      (c) => c['id'] == selectedCategory,
+    )['query']!;
     final newImages = await rasmlar.searchBMW(query, currentPage);
 
     setState(() {
@@ -245,7 +255,10 @@ class _WallpaperPageState extends State<WallpaperPage> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(cat['icon']!, style: TextStyle(fontSize: 16)),
+                                Text(
+                                  cat['icon']!,
+                                  style: TextStyle(fontSize: 16),
+                                ),
                                 SizedBox(width: 6),
                                 Text(
                                   cat['name']!,
@@ -312,7 +325,11 @@ class _WallpaperPageState extends State<WallpaperPage> {
                 color: Colors.grey[900],
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.directions_car, size: 60, color: Colors.grey[700]),
+              child: Icon(
+                Icons.directions_car,
+                size: 60,
+                color: Colors.grey[700],
+              ),
             ),
             SizedBox(height: 20),
             Text(
@@ -430,11 +447,14 @@ class _WallpaperPageState extends State<WallpaperPage> {
                                     color: Colors.white,
                                   ),
                                   SizedBox(width: 10),
-                                  Text(isSaved ? 'O\'chirildi' : 'Saqlandi! ❤️'),
+                                  Text(
+                                    isSaved ? 'O\'chirildi' : 'Saqlandi! ❤️',
+                                  ),
                                 ],
                               ),
-                              backgroundColor:
-                                  isSaved ? Colors.grey[700] : Colors.green,
+                              backgroundColor: isSaved
+                                  ? Colors.grey[700]
+                                  : Colors.green,
                               duration: Duration(seconds: 1),
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(
@@ -483,7 +503,11 @@ class _WallpaperPageState extends State<WallpaperPage> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.person, color: Colors.blue[400], size: 14),
+                            Icon(
+                              Icons.person,
+                              color: Colors.blue[400],
+                              size: 14,
+                            ),
                             SizedBox(width: 6),
                             Expanded(
                               child: Text(

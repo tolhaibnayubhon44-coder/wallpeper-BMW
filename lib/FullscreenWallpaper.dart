@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:walpeper_bmw_4_yangi/WallpaperProvider.dart';
-// import '../providers/wallpaper_provider.dart';
+import 'package:walpeper_bmw_4_yangi/wallpaper_service.dart';
+import '../WallpaperProvider.dart';
 
 class FullscreenWallpaper extends StatefulWidget {
   final Map<String, dynamic> image;
@@ -17,6 +17,8 @@ class FullscreenWallpaper extends StatefulWidget {
 
 class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
   bool _showControls = true;
+  bool _isLoading = false;
+  String _statusMessage = '';
 
   @override
   void initState() {
@@ -36,6 +38,18 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
     });
   }
 
+  String get _imageUrl =>
+      widget.image['full'] ??
+      widget.image['original'] ??
+      widget.image['portrait'] ??
+      widget.image['src']?['original'] ??
+      widget.image['src']?['portrait'] ??
+      '';
+
+  String get _fileName => 'BMW_Wallpaper_${widget.image['id']}';
+  
+  get Share => null;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,14 +59,14 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Fon rasmi - Zoom qilish mumkin
+            // Fon rasmi
             Hero(
               tag: 'main_${widget.image['id']}',
               child: InteractiveViewer(
                 minScale: 0.5,
                 maxScale: 4.0,
                 child: Image.network(
-                  widget.image['full'] ?? widget.image['portrait'],
+                  _imageUrl,
                   fit: BoxFit.cover,
                   loadingBuilder: (context, child, progress) {
                     if (progress == null) return child;
@@ -69,12 +83,66 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
                       ),
                     );
                   },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.black,
+                      child: const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error, color: Colors.red, size: 50),
+                            SizedBox(height: 10),
+                            Text(
+                              'Rasm yuklanmadi',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
 
+            // Loading overlay
+            if (_isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.8),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(30),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[900],
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 60,
+                          height: 60,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 4,
+                            color: Colors.blue[400],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          _statusMessage,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
             // Gradient overlay
-            if (_showControls)
+            if (_showControls && !_isLoading)
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
@@ -94,7 +162,7 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
               ),
 
             // Top Bar
-            if (_showControls)
+            if (_showControls && !_isLoading)
               Positioned(
                 top: 0,
                 left: 0,
@@ -105,13 +173,10 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Orqaga tugma
                         _buildCircleButton(
                           icon: Icons.arrow_back,
                           onTap: () => Navigator.pop(context),
                         ),
-
-                        // Title
                         Expanded(
                           child: Center(
                             child: Container(
@@ -136,8 +201,6 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
                             ),
                           ),
                         ),
-
-                        // ✅ SAQLASH TUGMASI
                         Consumer<WallpaperProvider>(
                           builder: (context, provider, child) {
                             final isSaved = provider.isSaved(widget.image['id']);
@@ -146,23 +209,10 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
                               color: isSaved ? Colors.red : Colors.white,
                               onTap: () {
                                 provider.toggleSave(widget.image);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Row(
-                                      children: [
-                                        Icon(
-                                          isSaved ? Icons.delete : Icons.favorite,
-                                          color: Colors.white,
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(isSaved ? 'O\'chirildi' : 'Saqlandi! ❤️'),
-                                      ],
-                                    ),
-                                    backgroundColor:
-                                        isSaved ? Colors.grey[700] : Colors.green,
-                                    duration: const Duration(seconds: 1),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
+                                _showSnackBar(
+                                  isSaved ? 'O\'chirildi' : 'Saqlandi! ❤️',
+                                  icon: isSaved ? Icons.delete : Icons.favorite,
+                                  color: isSaved ? Colors.grey[700]! : Colors.green,
                                 );
                               },
                             );
@@ -175,7 +225,7 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
               ),
 
             // Bottom Bar
-            if (_showControls)
+            if (_showControls && !_isLoading)
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -216,10 +266,7 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
                                   children: [
                                     const Text(
                                       'Photographer',
-                                      style: TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 12,
-                                      ),
+                                      style: TextStyle(color: Colors.grey, fontSize: 12),
                                     ),
                                     Text(
                                       widget.image['photographer'] ?? 'Unknown',
@@ -245,22 +292,22 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
                             _buildActionButton(
                               icon: Icons.info_outline,
                               label: 'Ma\'lumot',
-                              onTap: () => _showInfoDialog(context),
+                              onTap: () => _showInfoDialog(),
                             ),
                             _buildActionButton(
                               icon: Icons.download,
                               label: 'Yuklab olish',
-                              onTap: () => _downloadWallpaper(context),
+                              onTap: () => _downloadWallpaper(),
                             ),
                             _buildActionButton(
                               icon: Icons.wallpaper,
                               label: 'O\'rnatish',
-                              onTap: () => _setWallpaper(context),
+                              onTap: () => _setWallpaper(),
                             ),
                             _buildActionButton(
                               icon: Icons.share,
                               label: 'Ulashish',
-                              onTap: () => _shareWallpaper(context),
+                              onTap: () => _shareWallpaper(),
                             ),
                           ],
                         ),
@@ -287,10 +334,7 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
         decoration: BoxDecoration(
           color: Colors.black.withOpacity(0.5),
           shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white.withOpacity(0.2),
-            width: 1,
-          ),
+          border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
         ),
         child: Icon(icon, color: color, size: 24),
       ),
@@ -327,17 +371,108 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
           const SizedBox(height: 8),
           Text(
             label,
-            style: TextStyle(
-              color: Colors.grey[300],
-              fontSize: 11,
-            ),
+            style: TextStyle(color: Colors.grey[300], fontSize: 11),
           ),
         ],
       ),
     );
   }
 
-  void _showInfoDialog(BuildContext context) {
+  // ✅ YUKLAB OLISH - gallery_saver
+  Future<void> _downloadWallpaper() async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _statusMessage = 'Yuklab olinmoqda...';
+    });
+
+    try {
+      final success = await WallpaperService.saveToGallery(
+        imageUrl: _imageUrl,
+        fileName: _fileName,
+        onStatus: (status) {
+          if (mounted) {
+            setState(() => _statusMessage = status);
+          }
+        },
+      );
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+
+        if (success) {
+          _showSuccessDialog('Galereyaga saqlandi! 📥');
+        } else {
+          _showSnackBar(
+            'Yuklab olishda xatolik!',
+            icon: Icons.error,
+            color: Colors.red,
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showSnackBar('Xatolik: $e', icon: Icons.error, color: Colors.red);
+      }
+    }
+  }
+
+  // ✅ WALLPAPER O'RNATISH - wallx_setter
+  Future<void> _setWallpaper() async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _statusMessage = 'Wallpaper o\'rnatilmoqda...';
+    });
+
+    try {
+      final success = await WallpaperService.setWallpaper(
+        imageUrl: _imageUrl,
+        onStatus: (status) {
+          if (mounted) {
+            setState(() => _statusMessage = status);
+          }
+        },
+      );
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+
+        if (success) {
+          _showSuccessDialog('Wallpaper muvaffaqiyatli o\'rnatildi! 🎉');
+        } else {
+          _showSnackBar(
+            'Wallpaper o\'rnatishda xatolik!',
+            icon: Icons.error,
+            color: Colors.red,
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showSnackBar('Xatolik: $e', icon: Icons.error, color: Colors.red);
+      }
+    }
+  }
+
+  // ✅ ULASHISH
+  Future<void> _shareWallpaper() async {
+    try {
+      await Share.share(
+        'BMW Wallpaper: $_imageUrl\n\nDownload BMW Wallpaper App!',
+        subject: 'BMW Wallpaper',
+      );
+    } catch (e) {
+      _showSnackBar('Ulashishda xatolik!', icon: Icons.error, color: Colors.red);
+    }
+  }
+
+  // ✅ MA'LUMOT DIALOG
+  void _showInfoDialog() {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.grey[900],
@@ -373,8 +508,8 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
               const SizedBox(height: 16),
               _buildInfoRow('Photographer', widget.image['photographer'] ?? 'Unknown'),
               _buildInfoRow('Description', widget.image['description'] ?? 'No description'),
-              _buildInfoRow('Resolution', '${widget.image['width']}x${widget.image['height']}'),
-              _buildInfoRow('ID', widget.image['id']),
+              _buildInfoRow('Resolution', '${widget.image['width'] ?? '?'}x${widget.image['height'] ?? '?'}'),
+              _buildInfoRow('ID', '${widget.image['id'] ?? 'Unknown'}'),
               const SizedBox(height: 20),
             ],
           ),
@@ -407,125 +542,78 @@ class _FullscreenWallpaperState extends State<FullscreenWallpaper> {
     );
   }
 
-  void _downloadWallpaper(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: const [
-            Icon(Icons.download, color: Colors.white),
-            SizedBox(width: 10),
-            Text('Yuklab olinmoqda... 📥'),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  void _setWallpaper(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.grey[900],
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Wallpaper o\'rnatish',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
-              _buildSetOption(
-                icon: Icons.phone_android,
-                label: 'Bosh ekran',
-                onTap: () {
-                  Navigator.pop(context);
-                  _showSuccess(context, 'Bosh ekranga o\'rnatildi!');
-                },
-              ),
-              _buildSetOption(
-                icon: Icons.lock,
-                label: 'Qulflash ekrani',
-                onTap: () {
-                  Navigator.pop(context);
-                  _showSuccess(context, 'Qulflash ekraniga o\'rnatildi!');
-                },
-              ),
-              _buildSetOption(
-                icon: Icons.smartphone,
-                label: 'Ikkalasiga ham',
-                onTap: () {
-                  Navigator.pop(context);
-                  _showSuccess(context, 'Ikkala ekranga o\'rnatildi!');
-                },
-              ),
-              const SizedBox(height: 10),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSetOption({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.blue[400],
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(icon, color: Colors.white),
-      ),
-      title: Text(label, style: const TextStyle(color: Colors.white)),
-      trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
-      onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    );
-  }
-
-  void _shareWallpaper(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: const [
-            Icon(Icons.share, color: Colors.white),
-            SizedBox(width: 10),
-            Text('Ulashish... 📤'),
-          ],
-        ),
-        backgroundColor: Colors.blue,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  void _showSuccess(BuildContext context, String message) {
+  void _showSnackBar(String message, {required IconData icon, required Color color}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle, color: Colors.white),
+            Icon(icon, color: Colors.white),
             const SizedBox(width: 10),
-            Text(message),
+            Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.green,
+        backgroundColor: color,
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check_circle, color: Colors.green, size: 60),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Muvaffaqiyatli!',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[400], fontSize: 14),
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue[600]!, Colors.blue[400]!],
+                  ),
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: const Text(
+                  'OK',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
